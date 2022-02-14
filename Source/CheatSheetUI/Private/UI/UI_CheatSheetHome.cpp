@@ -35,7 +35,7 @@ void UUI_CheatSheetHome::SynchronizeProperties()
 		{
 			if (UInputSettings* InputSettings = const_cast<UInputSettings*>(GetDefault<UInputSettings>()))
 			{
-				const TArray<FInputActionKeyMapping> ExistingMappings = InputSettings->ActionMappings;
+				const TArray<FInputActionKeyMapping> ExistingMappings = InputSettings->GetActionMappings();
 				for (const FInputActionKeyMapping& ExistingMapping : ExistingMappings)
 				{
 					FInputActionKeyMapping CurrentMapping = ExistingMapping;

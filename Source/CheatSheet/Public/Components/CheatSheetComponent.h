@@ -6,7 +6,7 @@
 
 #include "CheatSheetComponent.generated.h"
 
-UCLASS(Within=PlayerController, MinimalAPI)
+UCLASS(MinimalAPI, meta = (BlueprintSpawnableComponent))
 class UCheatSheetComponent : public UActorComponent
 {
 	GENERATED_BODY()

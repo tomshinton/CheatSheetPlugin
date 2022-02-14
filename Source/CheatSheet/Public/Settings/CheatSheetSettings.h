@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <Runtime/Engine/Classes/Engine/DeveloperSettings.h>
+#include <Runtime/DeveloperSettings/Public/Engine/DeveloperSettings.h>
 #include <Runtime/UMG/Public/Blueprint/UserWidget.h>
 
 #include "CheatSheetSettings.generated.h"

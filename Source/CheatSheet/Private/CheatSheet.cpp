@@ -33,6 +33,8 @@ void FCheatSheetModule::StartupModule()
 {
 	UE_LOG(CheatSheetLog, Log, TEXT("Spinning up CheatSheet"));
 
+	UWorld* World = GWorld;
+
 	CheatSheetStaticBindings::TempPushInputs();
 }
 
