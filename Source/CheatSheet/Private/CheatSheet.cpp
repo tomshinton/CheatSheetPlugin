@@ -5,7 +5,6 @@
 
 #include <CheatSheetTypes/Public/Categories/CachedCheatAsset.h>
 #include <CheatSheetTypes/Public/Categories/CachedCheatBuilder.h>
-#include <CheatSheetTypes/Public/Input/CheatSheetStaticBindings.h>
 #include <CheatSheetUI/Public/UI/UI_CheatSheetHome.h>
 #include <CheatSheetUI/Public/UI/UI_CheatView.h>
 #include <Runtime/AssetRegistry/Public/AssetData.h>
@@ -14,16 +13,17 @@
 #include <Runtime/CoreUObject/Public/UObject/Script.h>
 #include <Runtime/CoreUObject/Public/UObject/UObjectIterator.h>
 #include <Runtime/Engine/Classes/GameFramework/CheatManager.h>
+#include <Runtime/Engine/Classes/GameFramework/GameModeBase.h>
 
 #define LOCTEXT_NAMESPACE "FCheatSheetModule"
 
 DEFINE_LOG_CATEGORY_STATIC(CheatSheetLog, Log, Log);
 
 FCheatSheetModule::FCheatSheetModule()
-	: CachedSettings(nullptr)
-	, CachedPlayerController(nullptr)
+	: CachedSettings(GetDefault<UCheatSheetSettings>())
+	, WeakPlayerController(nullptr)
+	, WeakCheatManager(nullptr)
 	, HomeScreen(nullptr)
-	, CurrentCheatManager(nullptr)
 	, IsHomeScreenVisible(false)
 	, Map()
 	, OnCheatMapBuilt()
@@ -33,119 +33,74 @@ void FCheatSheetModule::StartupModule()
 {
 	UE_LOG(CheatSheetLog, Log, TEXT("Spinning up CheatSheet"));
 
-	UWorld* World = GWorld;
+	FGameModeEvents::OnGameModePostLoginEvent().AddLambda([this](AGameModeBase* InGameMode, APlayerController* InNewPlayer)
+	{
+		CachedSettings = GetDefault<UCheatSheetSettings>();
+		WeakCheatManager = InNewPlayer->CheatManager;
+		WeakPlayerController = InNewPlayer;
 
-	CheatSheetStaticBindings::TempPushInputs();
+		PreCreateUI();
+		SetupBindings();
+
+		if (WeakCheatManager != nullptr)
+		{
+			RebuildCheatMap();
+		}
+	});
+
+	FWorldDelegates::OnWorldCleanup.AddRaw(this, &FCheatSheetModule::Cleanup);
 }
 
 void FCheatSheetModule::ShutdownModule()
 {
 	UE_LOG(CheatSheetLog, Log, TEXT("Shutting down CheatSheet"));
+
+	Cleanup(nullptr, false, false);
 }
 
-void FCheatSheetModule::Init(const APawn& InLocalPlayer)
+void FCheatSheetModule::Cleanup(UWorld* InWorld, bool bSessionEnded, bool bCleanupResources)
 {
-	ICheatSheetInterface& CheatSheetInterface = FModuleManager::GetModuleChecked<ICheatSheetInterface>("CheatSheet");
-	CheatSheetInterface.InitInternal(InLocalPlayer);
-}
-
-void FCheatSheetModule::Cleanup()
-{
-	ICheatSheetInterface& CheatSheetInterface = FModuleManager::GetModuleChecked<ICheatSheetInterface>("CheatSheet");
-	CheatSheetInterface.CleanupInternal();
-}
-
-void FCheatSheetModule::InitInternal(const APawn& InLocalPawn)
-{
-	CachedPlayerController = Cast<APlayerController>(InLocalPawn.GetController());
-
-	if (CachedPlayerController == nullptr)
-	{
-		UE_LOG(CheatSheetLog, Warning, TEXT("Attempting to pull a nullptr controller from %s in CheatSheet InitInternal - cannont build CheatSheet"), *InLocalPawn.GetName());
-		return;
-	}
-	else
-	{
-		CacheSettings();
-
-		if (CachedSettings != nullptr)
-		{
-			PreCreateUI();
-			SetupBindings();
-
-			CurrentCheatManager = CachedPlayerController->CheatManager;
-
-			if (CurrentCheatManager != nullptr)
-			{
-				RebuildCheatMap();
-			}
-		}
-		else
-		{
-			UE_LOG(CheatSheetLog, Error, TEXT("Attempting to spin up CheatSheet with invalid Settings - returning"));
-		}
-	}
-}
-
-void FCheatSheetModule::CleanupInternal()
-{
-	CachedPlayerController = nullptr;
-}
-
-void FCheatSheetModule::CacheSettings()
-{
-	if (CachedSettings == nullptr)
-	{
-		CachedSettings = GetMutableDefault<UCheatSheetSettings>();
-	}
-	else
-	{
-		UE_LOG(CheatSheetLog, Log, TEXT("CheatSheet settings alrady cached"));
-	}
+	WeakPlayerController = nullptr;
+	CachedSettings = nullptr;
 }
 
 void FCheatSheetModule::PreCreateUI()
 {
 	if(TSubclassOf<UUI_CheatSheetHome> HomeScreenClass = CachedSettings->CheatSheetMenu)
 	{
-		HomeScreen = CreateWidget<UUI_CheatSheetHome>(CachedPlayerController, HomeScreenClass);
+		HomeScreen = CreateWidget<UUI_CheatSheetHome>(WeakPlayerController.Get(), HomeScreenClass);
 		OnCheatMapBuilt.AddUObject(HomeScreen.Get(), &UUI_CheatSheetHome::AddMap);
 	}
 }
 
 void FCheatSheetModule::SetupBindings()
 {
-	//For actual key bindings, see CheatSheetStaticBindings
-	//All keys are bound in code to prevent GameDefaults.ini from getting in the way
-	if (UInputComponent* InputComponent = CachedPlayerController->GetPawn()->InputComponent)
+	if (HomeScreen.IsValid())
 	{
-		if (HomeScreen.IsValid())
-		{
-			//Show Menu
-			FInputActionBinding ShowMenuAB(CheatSheetStaticBindings::ShowMenu, IE_Pressed);
-			ShowMenuAB.ActionDelegate.GetDelegateForManualSet().BindRaw(this, &FCheatSheetModule::ToggleListUI);
-			InputComponent->AddActionBinding(ShowMenuAB);
+		////Show Menu
+		//FInputActionBinding ShowMenuAB(CheatSheetStaticBindings::ShowMenu, IE_Pressed);
+		//ShowMenuAB.ActionDelegate.GetDelegateForManualSet().BindRaw(this, &FCheatSheetModule::ToggleListUI);
+		//InputComponent->AddActionBinding(ShowMenuAB);
 
-			//Confirm
-			FInputActionBinding ConfirmAB(CheatSheetStaticBindings::Confirm, IE_Pressed);
-			ConfirmAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::ConfirmSelection);
-			InputComponent->AddActionBinding(ConfirmAB);
+		////Confirm
+		//FInputActionBinding ConfirmAB(CheatSheetStaticBindings::Confirm, IE_Pressed);
+		//ConfirmAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::ConfirmSelection);
+		//InputComponent->AddActionBinding(ConfirmAB);
 
-			//Up
-			FInputActionBinding UpAB(CheatSheetStaticBindings::Up, IE_Pressed);
-			UpAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::UpSelection);
-			InputComponent->AddActionBinding(UpAB);
+		////Up
+		//FInputActionBinding UpAB(CheatSheetStaticBindings::Up, IE_Pressed);
+		//UpAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::UpSelection);
+		//InputComponent->AddActionBinding(UpAB);
 
-			//Down
-			FInputActionBinding DownAB(CheatSheetStaticBindings::Down, IE_Pressed);
-			DownAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::DownSelection);
-			InputComponent->AddActionBinding(DownAB);
+		////Down
+		//FInputActionBinding DownAB(CheatSheetStaticBindings::Down, IE_Pressed);
+		//DownAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::DownSelection);
+		//InputComponent->AddActionBinding(DownAB);
 
-			//Back
-			FInputActionBinding BackAB(CheatSheetStaticBindings::Back, IE_Pressed);
-			BackAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen.Get(), &UUI_CheatSheetHome::ShowPreviousCategory);
-			InputComponent->AddActionBinding(BackAB);
-		}
+		////Back
+		//FInputActionBinding BackAB(CheatSheetStaticBindings::Back, IE_Pressed);
+		//BackAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen.Get(), &UUI_CheatSheetHome::ShowPreviousCategory);
+		//InputComponent->AddActionBinding(BackAB);
 	}
 }
 
@@ -153,11 +108,11 @@ void FCheatSheetModule::RebuildCheatMap()
 {
 	Map = CheatMap();
 
-	if (CurrentCheatManager.IsValid())
+	if (WeakCheatManager.IsValid())
 	{
-		UE_LOG(CheatSheetLog, Log, TEXT("Building CheatSheet from %s"), *CurrentCheatManager->GetName());
+		UE_LOG(CheatSheetLog, Log, TEXT("Building CheatSheet from %s"), *WeakCheatManager->GetName());
 
-		for (TFieldIterator<UFunction> Itr(CurrentCheatManager->GetClass(), EFieldIteratorFlags::IncludeSuper); Itr; ++Itr)
+		for (TFieldIterator<UFunction> Itr(WeakCheatManager->GetClass(), EFieldIteratorFlags::IncludeSuper); Itr; ++Itr)
 		{
 			if (UFunction* Function = *Itr)
 			{

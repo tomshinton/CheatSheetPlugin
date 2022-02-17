@@ -5,7 +5,6 @@
 #include "CheatSheetUI/Public/UI/Tips/UI_ControlTip.h"
 #include "CheatSheetUI/Public/UI/Tips/UI_CurrentTooltip.h"
 
-#include <CheatSheetTypes/Public/Input/CheatSheetStaticBindings.h>
 #include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
 #include <Runtime/UMG/Public/Blueprint/WidgetTree.h>
 #include <Runtime/UMG/Public/Components/TextBlock.h>
@@ -43,7 +42,7 @@ void UUI_CheatSheetHome::SynchronizeProperties()
 					const FString ActionNameAsString = ExistingMapping.ActionName.ToString();
 					const FString ReplacementPrefix = TEXT("");
 
-					if (ActionNameAsString.Contains(CheatSheetStaticBindings::CheatSheetInputPrefix))
+					/*if (ActionNameAsString.Contains(CheatSheetStaticBindings::CheatSheetInputPrefix))
 					{
 						if (UUI_ControlTip* NewTip = CreateWidget<UUI_ControlTip>(this, ControlTipClass))
 						{
@@ -52,7 +51,7 @@ void UUI_CheatSheetHome::SynchronizeProperties()
 							NewTip->Mapping = CurrentMapping;
 							ControlTipsBox->AddChild(NewTip);
 						}
-					}
+					}*/
 				}
 			}
 		}

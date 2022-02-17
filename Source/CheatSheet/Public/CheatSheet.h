@@ -23,8 +23,8 @@ public:
 
 	FCheatSheetModule();
 
-	CHEATSHEET_API static void Init(const APawn& InLocalPlayer);
-	CHEATSHEET_API static void Cleanup();
+	void Init(const UWorld::FActorsInitializedParams& InParams);
+	void Cleanup(UWorld* InWorld, bool bSessionEnded, bool bCleanupResources);
 
 	//IModuleInterface
 	virtual void StartupModule() override;
@@ -34,12 +34,9 @@ public:
 private:
 
 	//ICheatSheetInterface
-	virtual void InitInternal(const APawn& InLocalPawn) override;
-	virtual void CleanupInternal() override final;
 	virtual void RebuildCheatMap() override final;
 	//~ICheatSheetInterface
 
-	void CacheSettings();
 	void PreCreateUI();
 	void SetupBindings();
 
@@ -53,16 +50,13 @@ private:
 #endif //WITH_EDITOR
 
 	UPROPERTY()
-	UCheatSheetSettings* CachedSettings;
+	const UCheatSheetSettings* CachedSettings;
+
+	TWeakObjectPtr<APlayerController> WeakPlayerController;
+	TWeakObjectPtr<UCheatManager> WeakCheatManager;
 
 	UPROPERTY()
-	APlayerController* CachedPlayerController;
-
-	UPROPERTY()
-	TWeakObjectPtr<UUI_CheatSheetHome> HomeScreen; //This is weak as it may of been using a previous PIE PlayerController to keep it alive - if it's out of date of stale, recreate
-
-	UPROPERTY()
-	TWeakObjectPtr<UCheatManager> CurrentCheatManager;
+	TWeakObjectPtr<UUI_CheatSheetHome> HomeScreen;
 
 	bool IsHomeScreenVisible;
 
