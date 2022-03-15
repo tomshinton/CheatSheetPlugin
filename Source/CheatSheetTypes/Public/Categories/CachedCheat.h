@@ -58,6 +58,11 @@ public:
 	UPROPERTY()
 	UFunction* Func;
 
+	bool operator<(const FCachedCheat& InOtherCheat) const
+	{
+		return DisplayName < InOtherCheat.DisplayName;
+	}
+
 public:
 
 	FString GetTopLevelCat() const 

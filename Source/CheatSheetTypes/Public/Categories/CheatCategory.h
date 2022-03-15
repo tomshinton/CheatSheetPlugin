@@ -16,24 +16,25 @@ struct FCheatCategory
 public:
 
 	CHEATSHEETTYPES_API FCheatCategory();
-	CHEATSHEETTYPES_API FCheatCategory(const FString InCategoryName, const FGuid& InParentID, const TFunction<void(const FCheatCategory&)>& InSubCatCallback);
+	CHEATSHEETTYPES_API FCheatCategory(const FString& InCategoryName, const FGuid& InParentID, const TFunction<void(const FCheatCategory&)>& InSubCatCallback);
 
-	CHEATSHEETTYPES_API const FString GetCategoryName() const;
-	CHEATSHEETTYPES_API const TArray<FCheatCategory> GetSubCategories() const;
-	CHEATSHEETTYPES_API TArray<FCheatCategory>& GetSubCategoriesAsRef();
-	CHEATSHEETTYPES_API const FGuid GetCategoryID() const;
-	CHEATSHEETTYPES_API const FGuid GetParentID() const;
-	CHEATSHEETTYPES_API const TArray<FCachedCheat> GetCheats() const;
+	CHEATSHEETTYPES_API FString GetCategoryName() const;
+	CHEATSHEETTYPES_API TArray<FCheatCategory> GetSubCategories() const;
+	TArray<FCheatCategory>& GetSubCategoriesAsRef();
+	CHEATSHEETTYPES_API FGuid GetCategoryID() const;
+	CHEATSHEETTYPES_API FGuid GetParentID() const;
+	CHEATSHEETTYPES_API TArray<FCachedCheat> GetCheats() const;
 
 	void AddCheat( FCachedCheat& InCheat);
 
-#if WITH_EDITOR
-	CHEATSHEETTYPES_API void Print(const uint8 Depth) const;
-#endif //WITH_EDITOR
+	bool operator<(const FCheatCategory& InOtherCategory) const
+	{
+		return CategoryName < InOtherCategory.CategoryName;
+	}
 
 private:
 	
-	FCheatCategory* GetExistingTopLevel(const FString InCategoryName);
+	FCheatCategory* GetExistingTopLevel(const FString& InCategoryName);
 
 	FString CategoryName;
 

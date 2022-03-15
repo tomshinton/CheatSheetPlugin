@@ -11,18 +11,19 @@ public:
 
 	CHEATSHEETTYPES_API CheatMap();
 
-	//Deliberately take this in as a copy
 	CHEATSHEETTYPES_API void AddCheat(FCachedCheat InCheat);
 
-	const TArray<FCheatCategory> GetCategories() const { return Map; }
+	CHEATSHEETTYPES_API void Reset();
+	CHEATSHEETTYPES_API void Sort();
+	
+	TArray<FCheatCategory> GetCategories() const { return Map; }
 	CHEATSHEETTYPES_API FCheatCategory GetCategoryByID(const FGuid& InID) const;
-
-	CHEATSHEETTYPES_API const TArray<FString> GetHistoryFromID(const FGuid& InID);
+	CHEATSHEETTYPES_API TArray<FString> GetHistoryFromID(const FGuid& InID) const;
 
 private:
 
-	void GetHistoryFromID(TArray<FString>& InExistingString, const FGuid& InID);
-	FCheatCategory* GetExistingTopLevel(const FString InCategoryName);
+	void GetHistoryFromID(TArray<FString>& InExistingString, const FGuid& InID) const;
+	const FCheatCategory* GetExistingTopLevel(const FString& InCategoryName) const;
 	void AddSubcategoryToFlatMap(const FCheatCategory& InNewSubCategory);
 
 	TArray<FCheatCategory> Map;

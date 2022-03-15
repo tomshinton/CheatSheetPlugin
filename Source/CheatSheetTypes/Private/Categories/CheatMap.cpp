@@ -7,13 +7,11 @@ DEFINE_LOG_CATEGORY_STATIC(CheatMapLog, Log, Log);
 CheatMap::CheatMap()
 	: Map()
 	, FlatMap()
-{
-
-}
+{}
 
 void CheatMap::AddCheat(FCachedCheat InCheat)
 {
-	if (FCheatCategory* ExistingCategory = GetExistingTopLevel(InCheat.GetTopLevelCat()))
+	if (FCheatCategory* ExistingCategory = const_cast<FCheatCategory*>(GetExistingTopLevel(InCheat.GetTopLevelCat())))
 	{
 		ExistingCategory->AddCheat(InCheat);
 	}
@@ -35,6 +33,17 @@ void CheatMap::AddCheat(FCachedCheat InCheat)
 	}
 }
 
+void CheatMap::Reset()
+{
+	Map.Empty();
+	FlatMap.Empty();
+}
+
+void CheatMap::Sort()
+{
+	Map.Sort();
+}
+
 FCheatCategory CheatMap::GetCategoryByID(const FGuid& InCategoryID) const
 {
 	if (FlatMap.Contains(InCategoryID))
@@ -45,7 +54,7 @@ FCheatCategory CheatMap::GetCategoryByID(const FGuid& InCategoryID) const
 	return FCheatCategory();
 }
 
-const TArray<FString> CheatMap::GetHistoryFromID(const FGuid& InID)
+TArray<FString> CheatMap::GetHistoryFromID(const FGuid& InID) const
 {
 	TArray<FString> NewHistory;
 	GetHistoryFromID(NewHistory, InID);
@@ -53,7 +62,7 @@ const TArray<FString> CheatMap::GetHistoryFromID(const FGuid& InID)
 	return NewHistory;
 }
 
-void CheatMap::GetHistoryFromID(TArray<FString>& InExistingHistory, const FGuid& InID)
+void CheatMap::GetHistoryFromID(TArray<FString>& InExistingHistory, const FGuid& InID) const
 {
 	if (FlatMap.Contains(InID))
 	{
@@ -69,7 +78,7 @@ void CheatMap::GetHistoryFromID(TArray<FString>& InExistingHistory, const FGuid&
 	}
 }
 
-FCheatCategory* CheatMap::GetExistingTopLevel(const FString InCategoryName)
+const FCheatCategory* CheatMap::GetExistingTopLevel(const FString& InCategoryName) const
 {
 	return Map.FindByPredicate([&InCategoryName](const FCheatCategory& Category)
 	{

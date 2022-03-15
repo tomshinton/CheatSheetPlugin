@@ -16,7 +16,9 @@ class CHEATSHEETTYPES_API UCachedCheatBuilder : public UObject
 
 public:
 
-	UCachedCheatBuilder();
+	UCachedCheatBuilder(const FObjectInitializer& InObjectInitialiser)
+		: Super(InObjectInitialiser)
+	{};
 	
 	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Categories in descending order.  For Instance, Root/Category1/Category2."))
 	TArray<FString> Categories;

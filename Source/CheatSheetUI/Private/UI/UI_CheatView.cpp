@@ -140,7 +140,7 @@ void UUI_CheatView::ApplyEntryNumbers()
 			if (ICheatEntryInterface* Entry = Cast<ICheatEntryInterface>(Child))
 			{
 				Entry->SetEntryNumber(TotalEntries);
-				Entries.Add(TotalEntries, *Entry);
+				Entries.Add(TotalEntries, Entry);
 
 				TotalEntries++;
 			}
@@ -152,7 +152,7 @@ void UUI_CheatView::ApplyEntryNumbers()
 			if (ICheatEntryInterface* Entry = Cast<ICheatEntryInterface>(Child))
 			{
 				Entry->SetEntryNumber(TotalEntries);
-				Entries.Add(TotalEntries, *Entry);
+				Entries.Add(TotalEntries, Entry);
 
 				TotalEntries++;
 			}

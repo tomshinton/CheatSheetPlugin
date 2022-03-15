@@ -63,7 +63,7 @@ private:
 	
 	bool IsHomeScreenVisible;
 
-	TOptional<CheatMap> Map;
+	CheatMap Map;
 	FOnCheatMapBuilt OnCheatMapBuilt;
 
 	TWeakObjectPtr<UInputComponent> WeakInputComponent;

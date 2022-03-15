@@ -23,7 +23,7 @@ public:
 	void SetRequestCallback(const TFunction<void(const FCheatCategory&)>& InRequestCallback) { RequestCallback = InRequestCallback; }
 
 	//ICheatEntryInterface
-	void ExecuteEntry() override;
+	virtual void ExecuteEntry() override;
 	//~ICheatEntryInterface
 
 protected:

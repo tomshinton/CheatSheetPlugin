@@ -138,14 +138,12 @@ void FCheatSheetModule::RebuildCheatMap()
 			{
 				if ((Function->FunctionFlags & FUNC_Exec) && (Function->NumParms == 0))
 				{
-					Map.GetValue().AddCheat(FCachedCheat(
+					Map.AddCheat(FCachedCheat(
 						*Function->GetName(),
 						*Function->GetName(), 
 						Function->GetMetaData(TEXT("Category")),
 						Function->GetMetaData(TEXT("Tooltip")),
 						Function));
-
-					UE_LOG(CheatSheetLog, Log, TEXT("Function Found from CheatManager: %s();"), *Function->GetName());
 				}
 			}
 		}
@@ -170,7 +168,7 @@ void FCheatSheetModule::RebuildCheatMap()
 			if (UCachedCheatAsset* CheatAsset = Cast<UCachedCheatAsset>(Asset.GetAsset()))
 			{
 				UE_LOG(CheatSheetLog, Log, TEXT("Autodiscovered CheatAssets: %s"), *CheatAsset->CheatString);
-				Map.GetValue().AddCheat(CheatAsset->GetCheat());
+				Map.AddCheat(CheatAsset->GetCheat());
 			}
 		}
 	}
@@ -192,12 +190,11 @@ void FCheatSheetModule::RebuildCheatMap()
 
 		TArray< FAssetData > AssetList;
 		AssetRegistry.GetAssets(Filter, AssetList);
-		for(auto const& Asset : AssetList)
+		for(const FAssetData& Asset : AssetList)
 		{
 			const FAssetTagValueRef Tag = Asset.TagsAndValues.FindTag(TEXT("GeneratedClass"));
 			if(Tag.IsSet())
 			{
-				// Convert path to just the name part
 				const FString ClassObjectPath = FPackageName::ExportTextPathToObjectPath(*Tag.AsString());
 				const FString ClassName = FPackageName::ObjectPathToObjectName(ClassObjectPath);
 
@@ -212,9 +209,9 @@ void FCheatSheetModule::RebuildCheatMap()
 							{
 								const FString RebuiltString = FString::Printf(TEXT("%s %s"), *CheatAssetCDO->CheatStringRoot, *GeneratedCheat);
 
-								Map.GetValue().AddCheat(FCachedCheat(
-									RebuiltString, //Name actual
-									RebuiltString, //Display name for autodiscovered cheats
+								Map.AddCheat(FCachedCheat(
+									RebuiltString,
+									RebuiltString,
 									CheatAssetCDO->Categories,
 									CheatAssetCDO->Tooltip,
 									nullptr));
@@ -225,22 +222,10 @@ void FCheatSheetModule::RebuildCheatMap()
 			}
 		}
 	}
-		
-	OnCheatMapBuilt.Broadcast(Map.GetValue());
+	
+	Map.Sort();
+	OnCheatMapBuilt.Broadcast(Map);
 }
-
-#if WITH_EDITOR
-void FCheatSheetModule::DebugPrintCheatMap()
-{
-	if (Map.IsSet())
-	{
-		for (const FCheatCategory& Cat : Map.GetValue().GetCategories())
-		{
-			Cat.Print(0);
-		}
-	}
-}
-#endif //WITH_EDITOR
 
 void FCheatSheetModule::ToggleListUI()
 {
@@ -263,10 +248,8 @@ void FCheatSheetModule::ToggleListUI()
 
 void FCheatSheetModule::ShowList()
 {
-	HomeScreen->AddToViewport(100); //Add it at Z100 so it's most likely infront of everything else
-
+	HomeScreen->AddToViewport(100);
 	HomeScreen->InitHomeView();
-
 	IsHomeScreenVisible = true;
 }
 
