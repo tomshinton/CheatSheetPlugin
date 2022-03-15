@@ -1,6 +1,7 @@
 // CheatSheet Plugin - Tom Shinton 2019
 
 #include "CheatSheetEditor/Public/CheatSheetEditor.h"
+#include "CheatSheetEditor/Public/Customisation/CheatSheetInputSettingsCustomisation.h"
 #include "CheatSheetEditor/Public/Actions/CachedCheatAssetActions.h"
 #include "CheatSheetEditor/Public/Actions/CachedCheatBuilderActions.h"
 
@@ -24,6 +25,8 @@ void FCheatSheetEditorModule::StartupModule()
 {
 	RegisterNewAssetCategory();
 	RegisterNewAssetIcon();
+
+	RegisterInputCustomisation();
 
 	if (ICheatSheetInterface* CheatSheetInterface = FModuleManager::GetModulePtr<ICheatSheetInterface>("CheatSheet"))
 	{
@@ -83,6 +86,14 @@ void FCheatSheetEditorModule::RegisterNewAssetIcon()
 		StyleSet->Set("ClassThumbnail.CachedCheatBuilder", CachedCheatBuilderBrush);
 		FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
 	}
+}
+
+void FCheatSheetEditorModule::RegisterInputCustomisation()
+{
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyModule.RegisterCustomClassLayout("CheatSheetSettings", FOnGetDetailCustomizationInstance::CreateStatic(&FCheatSheetInputSettingsCustomisation::MakeInstance));
+
+	PropertyModule.NotifyCustomizationModuleChanged();
 }
 
 #undef LOCTEXT_NAMESPACE

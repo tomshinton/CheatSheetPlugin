@@ -6,7 +6,7 @@ public class CheatSheetTypes : ModuleRules
 {
     public CheatSheetTypes(ReadOnlyTargetRules Target) : base(Target)
     {
-        DefaultBuildSettings = BuildSettingsVersion.V2;
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
         new string[]

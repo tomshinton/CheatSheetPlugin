@@ -23,6 +23,7 @@ private:
 
 	void RegisterNewAssetCategory();
 	void RegisterNewAssetIcon();
+	void RegisterInputCustomisation();
 
 	TSharedPtr<FSlateStyleSet> StyleSet;
 };

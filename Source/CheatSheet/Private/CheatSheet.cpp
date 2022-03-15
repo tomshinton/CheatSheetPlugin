@@ -20,13 +20,14 @@
 DEFINE_LOG_CATEGORY_STATIC(CheatSheetLog, Log, Log);
 
 FCheatSheetModule::FCheatSheetModule()
-	: CachedSettings(GetDefault<UCheatSheetSettings>())
+	: CachedSettings(GetMutableDefault<UCheatSheetSettings>())
+	, HomeScreen(nullptr)
 	, WeakPlayerController(nullptr)
 	, WeakCheatManager(nullptr)
-	, HomeScreen(nullptr)
 	, IsHomeScreenVisible(false)
 	, Map()
 	, OnCheatMapBuilt()
+	, WeakInputComponent(nullptr)
 {}
 
 void FCheatSheetModule::StartupModule()
@@ -35,17 +36,11 @@ void FCheatSheetModule::StartupModule()
 
 	FGameModeEvents::OnGameModePostLoginEvent().AddLambda([this](AGameModeBase* InGameMode, APlayerController* InNewPlayer)
 	{
-		CachedSettings = GetDefault<UCheatSheetSettings>();
+		CachedSettings = GetMutableDefault<UCheatSheetSettings>();
 		WeakCheatManager = InNewPlayer->CheatManager;
 		WeakPlayerController = InNewPlayer;
 
-		PreCreateUI();
-		SetupBindings();
-
-		if (WeakCheatManager != nullptr)
-		{
-			RebuildCheatMap();
-		}
+		SetupBindings(*InNewPlayer);
 	});
 
 	FWorldDelegates::OnWorldCleanup.AddRaw(this, &FCheatSheetModule::Cleanup);
@@ -58,56 +53,81 @@ void FCheatSheetModule::ShutdownModule()
 	Cleanup(nullptr, false, false);
 }
 
+void FCheatSheetModule::AddReferencedObjects(FReferenceCollector& Collector)
+{
+	Collector.AddReferencedObject(CachedSettings);
+	Collector.AddReferencedObject(HomeScreen);
+}
+
 void FCheatSheetModule::Cleanup(UWorld* InWorld, bool bSessionEnded, bool bCleanupResources)
 {
 	WeakPlayerController = nullptr;
 	CachedSettings = nullptr;
+	IsHomeScreenVisible = false;
 }
 
-void FCheatSheetModule::PreCreateUI()
+void FCheatSheetModule::CreateUI()
 {
 	if(TSubclassOf<UUI_CheatSheetHome> HomeScreenClass = CachedSettings->CheatSheetMenu)
 	{
 		HomeScreen = CreateWidget<UUI_CheatSheetHome>(WeakPlayerController.Get(), HomeScreenClass);
-		OnCheatMapBuilt.AddUObject(HomeScreen.Get(), &UUI_CheatSheetHome::AddMap);
+		OnCheatMapBuilt.AddUObject(HomeScreen, &UUI_CheatSheetHome::AddMap);
+
+		RebuildCheatMap();
 	}
 }
 
-void FCheatSheetModule::SetupBindings()
+void FCheatSheetModule::SetupBindings(APlayerController& InPlayerController)
 {
-	if (HomeScreen.IsValid())
+	UInputComponent* NewInputComponent = NewObject<UInputComponent>(&InPlayerController);
+	WeakInputComponent = NewInputComponent;
+
+	UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetShowBinding());
+
+	FInputActionBinding ShowMenuAB(CheatSheetBindingNames::ShowBinding, IE_Pressed);
+	ShowMenuAB.ActionDelegate.GetDelegateForManualSet().BindRaw(this, &FCheatSheetModule::ToggleListUI);
+	NewInputComponent->AddActionBinding(ShowMenuAB);
+
+	NewInputComponent->RegisterComponent();
+	InPlayerController.PushInputComponent(NewInputComponent);
+}
+
+void FCheatSheetModule::SetupUINavigation()
+{
+	if (UInputComponent* StrongInputComponent = WeakInputComponent.Get())
 	{
-		////Show Menu
-		//FInputActionBinding ShowMenuAB(CheatSheetStaticBindings::ShowMenu, IE_Pressed);
-		//ShowMenuAB.ActionDelegate.GetDelegateForManualSet().BindRaw(this, &FCheatSheetModule::ToggleListUI);
-		//InputComponent->AddActionBinding(ShowMenuAB);
+		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetConfirmBinding());
+		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetUpBinding());
+		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetDownBinding());
+		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetBackBinding());
 
-		////Confirm
-		//FInputActionBinding ConfirmAB(CheatSheetStaticBindings::Confirm, IE_Pressed);
-		//ConfirmAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::ConfirmSelection);
-		//InputComponent->AddActionBinding(ConfirmAB);
+		//Up
+		FInputActionBinding UpAB(CheatSheetBindingNames::UpBinding, IE_Pressed);
+		UpAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::UpSelection);
+		StrongInputComponent->AddActionBinding(UpAB);
 
-		////Up
-		//FInputActionBinding UpAB(CheatSheetStaticBindings::Up, IE_Pressed);
-		//UpAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::UpSelection);
-		//InputComponent->AddActionBinding(UpAB);
+		//Confirm
+		FInputActionBinding ConfirmAB(CheatSheetBindingNames::ConfirmBinding, IE_Pressed);
+		ConfirmAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::ConfirmSelection);
+		StrongInputComponent->AddActionBinding(ConfirmAB);
 
-		////Down
-		//FInputActionBinding DownAB(CheatSheetStaticBindings::Down, IE_Pressed);
-		//DownAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::DownSelection);
-		//InputComponent->AddActionBinding(DownAB);
+		//Down
+		FInputActionBinding DownAB(CheatSheetBindingNames::DownBinding, IE_Pressed);
+		DownAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::DownSelection);
+		StrongInputComponent->AddActionBinding(DownAB);
 
-		////Back
-		//FInputActionBinding BackAB(CheatSheetStaticBindings::Back, IE_Pressed);
-		//BackAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen.Get(), &UUI_CheatSheetHome::ShowPreviousCategory);
-		//InputComponent->AddActionBinding(BackAB);
+		//Back
+		FInputActionBinding BackAB(CheatSheetBindingNames::BackBinding, IE_Pressed);
+		BackAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen, &UUI_CheatSheetHome::ShowPreviousCategory);
+		StrongInputComponent->AddActionBinding(BackAB);
 	}
 }
 
 void FCheatSheetModule::RebuildCheatMap()
 {
-	Map = CheatMap();
+	Map.Reset();
 
+	//Parse CheatManager, if possible
 	if (WeakCheatManager.IsValid())
 	{
 		UE_LOG(CheatSheetLog, Log, TEXT("Building CheatSheet from %s"), *WeakCheatManager->GetName());
@@ -119,8 +139,8 @@ void FCheatSheetModule::RebuildCheatMap()
 				if ((Function->FunctionFlags & FUNC_Exec) && (Function->NumParms == 0))
 				{
 					Map.GetValue().AddCheat(FCachedCheat(
-						*Function->GetName(), //Name actual
-						*Function->GetName(), //Display name for autodiscovered cheats
+						*Function->GetName(),
+						*Function->GetName(), 
 						Function->GetMetaData(TEXT("Category")),
 						Function->GetMetaData(TEXT("Tooltip")),
 						Function));
@@ -131,68 +151,81 @@ void FCheatSheetModule::RebuildCheatMap()
 		}
 	}
 
-	//Grab all CheatAssets
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-
-	TArray<FAssetData> CheatAssets;
-	const UClass* CachedCheatClass = UCachedCheatAsset::StaticClass();
-	AssetRegistryModule.Get().GetAssetsByClass(CachedCheatClass->GetFName(), CheatAssets);
-	for (const FAssetData& Asset : CheatAssets)
+	IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+	
+	//Find Cheat Assets
 	{
-		if (UCachedCheatAsset* CheatAsset = Cast<UCachedCheatAsset>(Asset.GetAsset()))
+		TArray<FAssetData> CheatAssets;
+		const UClass* CachedCheatClass = UCachedCheatAsset::StaticClass();
+		AssetRegistry.GetAssetsByClass(CachedCheatClass->GetFName(), CheatAssets);
+		
+		if(CheatAssets.Num() > 0)
 		{
-			Map.GetValue().AddCheat(CheatAsset->GetCheat());
-			UE_LOG(CheatSheetLog, Log, TEXT("Function Found from autodiscovered CheatAssets: %s();"), *CheatAsset->CheatString);
+			UE_LOG(CheatSheetLog, Log, TEXT("Autodiscovered %i additional CheatSheets"), CheatAssets.Num());
 		}
-	}
-
-	TArray<FAssetData> BuilderAssets;
-	const UClass* CachedCheatBuilder = UCachedCheatBuilder::StaticClass();
-	AssetRegistryModule.Get().GetAssetsByClass(CachedCheatBuilder->GetFName(), BuilderAssets);
-	for (const FAssetData& Asset : BuilderAssets)
-	{
-		if (UCachedCheatBuilder* BuilderAsset = Cast<UCachedCheatBuilder>(Asset.GetAsset()))
+		
+		for (const FAssetData& Asset : CheatAssets)
 		{
-			const TArray<FString> GeneratedParams = BuilderAsset->Generate();
-			for (const FString& Param : GeneratedParams)
+			if (UCachedCheatAsset* CheatAsset = Cast<UCachedCheatAsset>(Asset.GetAsset()))
 			{
-				const FString RebuiltString = FString::Printf(TEXT("%s %s"), *BuilderAsset->CheatStringRoot, *Param);
-
-				Map.GetValue().AddCheat(FCachedCheat(
-					RebuiltString, //Name actual
-					RebuiltString, //Display name for autodiscovered cheats
-					BuilderAsset->Categories,
-					BuilderAsset->Tooltip,
-					nullptr));
-
-				UE_LOG(CheatSheetLog, Log, TEXT("Function Found from autogenerated CheatBuilder: %s();"), *RebuiltString);
+				UE_LOG(CheatSheetLog, Log, TEXT("Autodiscovered CheatAssets: %s"), *CheatAsset->CheatString);
+				Map.GetValue().AddCheat(CheatAsset->GetCheat());
 			}
 		}
 	}
 
-	TArray< FString > ContentPaths;
-	ContentPaths.Add(TEXT("/Game"));
-	AssetRegistryModule.Get().ScanPathsSynchronous(ContentPaths);
-	FName BaseClassName = CachedCheatBuilder->GetFName();
-
-	// Use the asset registry to get the set of all class names deriving from Base
-	TSet< FName > DerivedNames;
+	//Find Cheat Builder Assets
 	{
-		TArray< FName > BaseNames;
-		BaseNames.Add(BaseClassName);
+		TSet< FName > DerivedNames;
+		{
+			TArray<FName> BaseNames;
+			BaseNames.Add("CachedCheatBuilder");
+			TSet<FName> Excluded;
+			AssetRegistry.GetDerivedClassNames(BaseNames, Excluded, DerivedNames);
+		}
+		
+		FARFilter Filter;
+		Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+		Filter.bRecursiveClasses = true;
+		Filter.bRecursivePaths = true;
 
-		TSet< FName > Excluded;
-		AssetRegistryModule.Get().GetDerivedClassNames(BaseNames, Excluded, DerivedNames);
+		TArray< FAssetData > AssetList;
+		AssetRegistry.GetAssets(Filter, AssetList);
+		for(auto const& Asset : AssetList)
+		{
+			const FAssetTagValueRef Tag = Asset.TagsAndValues.FindTag(TEXT("GeneratedClass"));
+			if(Tag.IsSet())
+			{
+				// Convert path to just the name part
+				const FString ClassObjectPath = FPackageName::ExportTextPathToObjectPath(*Tag.AsString());
+				const FString ClassName = FPackageName::ObjectPathToObjectName(ClassObjectPath);
+
+				if(DerivedNames.Contains(*ClassName))
+				{
+					if (UBlueprint* CheatAsset = Cast<UBlueprint>(Asset.GetAsset()))
+					{
+						if (UCachedCheatBuilder* CheatAssetCDO = Cast<UCachedCheatBuilder>(CheatAsset->GeneratedClass->GetDefaultObject()))
+						{
+							const TArray<FString> GeneratedCheats = CheatAssetCDO->Generate();
+							for (const FString& GeneratedCheat : GeneratedCheats)
+							{
+								const FString RebuiltString = FString::Printf(TEXT("%s %s"), *CheatAssetCDO->CheatStringRoot, *GeneratedCheat);
+
+								Map.GetValue().AddCheat(FCachedCheat(
+									RebuiltString, //Name actual
+									RebuiltString, //Display name for autodiscovered cheats
+									CheatAssetCDO->Categories,
+									CheatAssetCDO->Tooltip,
+									nullptr));
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-
-	FARFilter Filter;
-	Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
-	Filter.bRecursivePaths = true;
-
-	TArray< FAssetData > AssetList;
-	AssetRegistryModule.Get().GetAssets(Filter, AssetList);
-
-
+		
 	OnCheatMapBuilt.Broadcast(Map.GetValue());
 }
 
@@ -211,9 +244,20 @@ void FCheatSheetModule::DebugPrintCheatMap()
 
 void FCheatSheetModule::ToggleListUI()
 {
-	if (HomeScreen.IsValid())
+	if (UInputComponent* StrongInputComponent = WeakInputComponent.Get())
 	{
-		IsHomeScreenVisible ? HideList() : ShowList();
+		if (IsHomeScreenVisible)
+		{
+			StrongInputComponent->bBlockInput = false;
+			HideList();
+		}
+		else
+		{
+			CreateUI();
+			SetupUINavigation();
+			StrongInputComponent->bBlockInput = true;
+			ShowList();
+		}
 	}
 }
 
@@ -228,7 +272,7 @@ void FCheatSheetModule::ShowList()
 
 void FCheatSheetModule::HideList()
 {
-	HomeScreen->RemoveFromParent();
+	HomeScreen->RemoveFromViewport();
 	IsHomeScreenVisible = false;
 }
 

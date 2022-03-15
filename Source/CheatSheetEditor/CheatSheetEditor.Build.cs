@@ -6,26 +6,21 @@ public class CheatSheetEditor : ModuleRules
 {
     public CheatSheetEditor(ReadOnlyTargetRules Target) : base(Target)
     {
-        DefaultBuildSettings = BuildSettingsVersion.V2;
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(
-        new string[]
+        PrivateDependencyModuleNames.AddRange(new string[]
         {
             "Core",
-        }
-        );
-
-
-        PrivateDependencyModuleNames.AddRange(
-        new string[]
-        {
             "CoreUObject",
+            "CheatSheet",
             "CheatSheetTypes",
+            "DetailCustomizations",
             "Engine",
             "Projects",
+            "Slate",
             "SlateCore",
             "UnrealEd",
-		}
-        );
+            "PropertyEditor"
+        });
     }
 }

@@ -8,53 +8,84 @@
 
 #include "CheatSheetSettings.generated.h"
 
+namespace CheatSheetBindingNames
+{
+	const FName ShowBinding = TEXT("CS_SHOW");
+	const FName ConfirmBinding = TEXT("CS_CONFIRM");
+	const FName UpBinding = TEXT("CS_UP");
+	const FName DownBinding = TEXT("CS_DOWN");
+	const FName BackBinding = TEXT("CS_BACK");
+};
+
 class UUI_CheatSheetHome;
 
-namespace BindingNames
-{
-	const FName Show = TEXT("CHEATSHEET_SHOW");
-	const FName Confirm = TEXT("CHEATSHEET_CONFIRM");
-	const FName Up = TEXT("CHEATSHEET_Up");
-	const FName Down = TEXT("CHEATSHEET_Down");
-	const FName Back = TEXT("CHEATSHEET_Back");
-}
-
-UCLASS(config = CheatSheet, defaultconfig, meta = (DisplayName = "CheatSheet"))
-class UCheatSheetSettings : public UDeveloperSettings
+UCLASS(config = Game, defaultconfig, meta = (DisplayName = "Cheat Sheet"))
+class CHEATSHEET_API UCheatSheetSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 
 public:
 
-	UCheatSheetSettings()
-		: CheatSheetMenu(nullptr)
-		, ShowMenuBinding(BindingNames::Show)
-		, ConfirmBinding(BindingNames::Confirm)
-		, UpBinding(BindingNames::Up)
-		, DownBinding(BindingNames::Down)
-		, BackBinding(BindingNames::Back)
+	UCheatSheetSettings(const FObjectInitializer& InObjectInitialiser)
+		: Super(InObjectInitialiser)
+		, CheatSheetMenu(nullptr)
+		, ShowBinding()
+		, ConfirmBinding()
+		, UpBinding()
+		, DownBinding()
+		, BackBinding()
 	{};
 
 	UPROPERTY(config, EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUI_CheatSheetHome> CheatSheetMenu;
 
-	UPROPERTY(config, EditDefaultsOnly, Category = "Show Menu Binding")
-	FInputActionKeyMapping ShowMenuBinding;
+	UPROPERTY(config, EditDefaultsOnly)
+	FInputActionKeyMapping ShowBinding;
 
-	UPROPERTY(config, EditDefaultsOnly, Category = "Confirm Binding")
+	UPROPERTY(config, EditDefaultsOnly)
 	FInputActionKeyMapping ConfirmBinding;
 
-	UPROPERTY(config, EditDefaultsOnly, Category = "Up Binding")
+	UPROPERTY(config, EditDefaultsOnly)
 	FInputActionKeyMapping UpBinding;
 
-	UPROPERTY(config, EditDefaultsOnly, Category = "Down Binding")
+	UPROPERTY(config, EditDefaultsOnly)
 	FInputActionKeyMapping DownBinding;
 
-	UPROPERTY(config, EditDefaultsOnly, Category = "Back Binding")
+	UPROPERTY(config, EditDefaultsOnly)
 	FInputActionKeyMapping BackBinding;
 
-	FName GetCategoryName() const override
+	//UDeveloperSettings
+	virtual FName GetCategoryName() const override { return FName(TEXT("Plugins")); }
+	//~UDeveloperSettings
+
+	FInputActionKeyMapping GetShowBinding()
 	{
-		return FName(TEXT("Plugins"));
+		ShowBinding.ActionName = CheatSheetBindingNames::ShowBinding;
+		return ShowBinding;
+	}
+
+	FInputActionKeyMapping GetConfirmBinding()
+	{
+		ConfirmBinding.ActionName = CheatSheetBindingNames::ConfirmBinding;
+		return ConfirmBinding;
+	}
+
+	FInputActionKeyMapping GetUpBinding()
+	{
+		UpBinding.ActionName = CheatSheetBindingNames::UpBinding;
+		return UpBinding;
+	}
+
+	FInputActionKeyMapping GetDownBinding() 
+	{
+		DownBinding.ActionName = CheatSheetBindingNames::DownBinding;
+		return DownBinding;
+	}
+
+	FInputActionKeyMapping GetBackBinding() 
+	{
+		BackBinding.ActionName = CheatSheetBindingNames::BackBinding;
+		return BackBinding;
 	}
 };
+
