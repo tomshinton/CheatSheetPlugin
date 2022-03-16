@@ -34,6 +34,14 @@ void UUI_CheatEntry::NativeConstruct()
 
 	if (EntryNameText != nullptr)
 	{
-		EntryNameText->SetText(FText::FromString(Cheat.CheatString));
+		if(!Cheat.DisplayName.IsEmpty())
+		{
+			EntryNameText->SetText(FText::FromString(Cheat.DisplayName));
+		}
+		else
+		{
+			EntryNameText->SetColorAndOpacity(FSlateColor(FColorList::Scarlet));
+			EntryNameText->SetText(FText::FromString(Cheat.CheatString));
+		}
 	}
 }
