@@ -162,16 +162,18 @@ void UUI_CheatView::ApplyEntryNumbers()
 
 void UUI_CheatView::ApplyNewSelectionIndex()
 {
-	if (CurrentSelection.IsValid()) //Deselect old entry
+	const TWeakInterfacePtr<ICheatEntryInterface> OldSelection = CurrentSelection;
+	
+	if (CurrentSelection.IsValid())
 	{
 		CurrentSelection->SetIsSelected(false);
 	}
 
 	CurrentSelection = Entries[CurrentSelectionIndex];
 
-	if (CurrentSelection.IsValid()) //Select new entry
+	if (CurrentSelection.IsValid())
 	{
 		CurrentSelection->SetIsSelected(true);
-		OnNewSelection.Broadcast(CurrentSelection);
+		OnNewSelection.Broadcast(OldSelection, CurrentSelection);
 	}
 }

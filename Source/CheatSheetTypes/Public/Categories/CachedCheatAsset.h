@@ -22,6 +22,7 @@ public:
 		, IsCommonlyUsed(false)
 		, Tooltip()
 		, DisplayName()
+		, ShouldCloseAfterExecution(true)
 	{};
 
 	FCachedCheat GetCheat() const
@@ -47,7 +48,7 @@ public:
 			CleanCategories.Insert(CachedCheatStatics::CommonlyUsed, 0);
 		}
 			
-		return FCachedCheat(CheatString, DisplayName, CleanCategories, Tooltip, nullptr);
+		return FCachedCheat(CheatString, DisplayName, CleanCategories, Tooltip, nullptr, ShouldCloseAfterExecution);
 	};
 
 
@@ -65,4 +66,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Readable cheat name"))
 	FString DisplayName;
+
+	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Should we close the CheatSheet once this command has been issued?"))
+	bool ShouldCloseAfterExecution;
 };

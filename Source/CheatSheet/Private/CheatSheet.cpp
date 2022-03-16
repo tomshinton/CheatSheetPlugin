@@ -123,6 +123,17 @@ void FCheatSheetModule::SetupUINavigation()
 	}
 }
 
+void FCheatSheetModule::UnbindUINavigation()
+{
+	if (UInputComponent* StrongInputComponent = WeakInputComponent.Get())
+	{
+		StrongInputComponent->RemoveActionBinding(CheatSheetBindingNames::UpBinding, IE_Pressed);
+		StrongInputComponent->RemoveActionBinding(CheatSheetBindingNames::ConfirmBinding, IE_Pressed);
+		StrongInputComponent->RemoveActionBinding(CheatSheetBindingNames::DownBinding, IE_Pressed);
+		StrongInputComponent->RemoveActionBinding(CheatSheetBindingNames::BackBinding, IE_Pressed);
+	}
+}
+
 void FCheatSheetModule::RebuildCheatMap()
 {
 	Map.Reset();
@@ -143,7 +154,8 @@ void FCheatSheetModule::RebuildCheatMap()
 						*Function->GetName(), 
 						Function->GetMetaData(TEXT("Category")),
 						Function->GetMetaData(TEXT("Tooltip")),
-						Function));
+						Function,
+						true));
 				}
 			}
 		}
@@ -214,7 +226,8 @@ void FCheatSheetModule::RebuildCheatMap()
 									RebuiltString,
 									CheatAssetCDO->Categories,
 									CheatAssetCDO->Tooltip,
-									nullptr));
+									nullptr,
+									true));
 							}
 						}
 					}
@@ -233,14 +246,26 @@ void FCheatSheetModule::ToggleListUI()
 	{
 		if (IsHomeScreenVisible)
 		{
-			StrongInputComponent->bBlockInput = false;
+			UnbindUINavigation();
 			HideList();
+
+			if(UWorld* World = GWorld)
+			{
+				World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateLambda([WeakInputComponent = WeakInputComponent]()
+				{
+					if (UInputComponent* StrongInputComponent = WeakInputComponent.Get())
+					{
+						StrongInputComponent->bBlockInput = false;
+					}
+				}));
+			}
 		}
 		else
 		{
+			StrongInputComponent->bBlockInput = true;
+			
 			CreateUI();
 			SetupUINavigation();
-			StrongInputComponent->bBlockInput = true;
 			ShowList();
 		}
 	}

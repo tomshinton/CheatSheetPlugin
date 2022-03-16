@@ -18,6 +18,7 @@ void UUI_CheatEntry::ExecuteEntry()
 		if (APlayerController* LocalPlayerController = World->GetFirstPlayerController<APlayerController>())
 		{
 			LocalPlayerController->ConsoleCommand(Cheat.CheatString);
+			OnCheatEntryExecuted.Execute(Cheat);
 		}
 	}
 }

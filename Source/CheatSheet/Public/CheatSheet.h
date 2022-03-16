@@ -41,13 +41,14 @@ private:
 
 	//ICheatSheetInterface
 	virtual void RebuildCheatMap() override final;
+	virtual void ToggleListUI() override final;
 	//~ICheatSheetInterface
 
 	void CreateUI();
 	void SetupBindings(APlayerController& InPlayerController);
 	void SetupUINavigation();
+	void UnbindUINavigation();
 
-	void ToggleListUI();
 	void ShowList();
 	void HideList();
 

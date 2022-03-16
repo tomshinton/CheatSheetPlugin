@@ -16,7 +16,7 @@ class UUI_CheatEntry;
 class UVerticalBox;
 
 DECLARE_EVENT_OneParam(UUI_CheatView, FOnNewCategoryRenderRequested, const FCheatCategory&)
-DECLARE_EVENT_OneParam(UUI_CheatView, FOnNewSelectiom, const TWeakInterfacePtr<ICheatEntryInterface>&)
+DECLARE_EVENT_TwoParams(UUI_CheatView, FOnNewSelectiom, const TWeakInterfacePtr<ICheatEntryInterface>& /*OldSelection*/, const TWeakInterfacePtr<ICheatEntryInterface>& /*NewSelection*/)
 
 UCLASS(hidedropdown, MinimalAPI)
 class UUI_CheatView : public UUserWidget

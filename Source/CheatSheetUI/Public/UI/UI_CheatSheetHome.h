@@ -47,13 +47,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UUI_CurrentTooltip* CurrentTooltipBox;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Categories")
-	TSubclassOf<UUI_ControlTip> ControlTipClass;
-
 private:
-
-	void SynchronizeProperties() override;
-
+	
 	void UpdateHistoryReadout(const FCheatCategory& InLastRequestedCategory);
 	static FString GetHistoryAsString(const TArray<FString>& InHistory);
 

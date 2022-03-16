@@ -24,6 +24,7 @@ public:
 		, EntryNameText(nullptr)
 		, SelectionBorder(nullptr)
 		, SelectedColour(FLinearColor())
+		, OnCheatEntryExecuted()
 		, EntryNumber(0)
 	{};
 
@@ -41,7 +42,7 @@ public:
 
 	//ICheatEntryInterface
 	virtual void ExecuteEntry() override {};
-
+	virtual FOnCheatEntryExecuted& GetOnCheatEntryExecuted() override final { return OnCheatEntryExecuted; };
 	virtual void SetEntryNumber(const int32 InNewNumber) override final 
 	{ 
 		EntryNumber = InNewNumber;
@@ -51,7 +52,6 @@ public:
 			EntryNumberText->SetText(FText::FromString(FString::FromInt(EntryNumber)));
 		}
 	}
-
 	virtual void SetIsSelected(const bool InNewSelection) override final
 	{
 		if (SelectionBorder != nullptr)
@@ -66,9 +66,13 @@ public:
 			}
 		}
 	}
-
 	virtual const FString GetEntryTip() const override { return FString(); };
+	virtual bool ShouldCloseAfterExecution() const override { return false; };
 	//~ICheatEntryInterface
+
+protected:
+	
+	FOnCheatEntryExecuted OnCheatEntryExecuted;
 
 private:
 

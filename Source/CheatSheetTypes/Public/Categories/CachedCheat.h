@@ -25,24 +25,27 @@ public:
 		, DisplayName(TEXT("EmptyCheat"))
 		, CatConcat()
 		, Tooltip(TEXT("This is an empty cheat - it will execute nothing"))
+		, ShouldCloseAfterExecution(true)
 		, Func(nullptr)
 	{}
 
-	FCachedCheat(const FString& InCheatString, const FString& InDisplayName, const FString& InCatConcat, const FString& InTooltip, UFunction* InFunc)
+	FCachedCheat(const FString& InCheatString, const FString& InDisplayName, const FString& InCatConcat, const FString& InTooltip, UFunction* InFunc, const bool InShouldCloseAfterExecution)
 		: CheatString(InCheatString)
 		, DisplayName(InCheatString)
 		, CatConcat()
 		, Tooltip(InTooltip)
+		, ShouldCloseAfterExecution(InShouldCloseAfterExecution)
 		, Func(InFunc)
 	{
 		CatConcat = ParseCategories(InCatConcat, Func);
 	};
 
-	FCachedCheat(const FString& InCheatString, const FString& InDisplayName, const TArray<FString>& InCatConcat, const FString& InTooltip, UFunction* InFunc)
+	FCachedCheat(const FString& InCheatString, const FString& InDisplayName, const TArray<FString>& InCatConcat, const FString& InTooltip, UFunction* InFunc, const bool InShouldCloseAfterExecution)
 		: CheatString(InCheatString)
 		, DisplayName(InDisplayName)
 		, CatConcat(InCatConcat)
 		, Tooltip(InTooltip)
+		, ShouldCloseAfterExecution(InShouldCloseAfterExecution)
 		, Func(InFunc)
 	{};
 
@@ -50,11 +53,10 @@ public:
 	FString CheatString;
 
 	FString DisplayName;
-
 	TArray<FString> CatConcat;
-
 	FString Tooltip;
-
+	bool ShouldCloseAfterExecution;
+	
 	UPROPERTY()
 	UFunction* Func;
 
@@ -76,7 +78,6 @@ public:
 			return CachedCheatStatics::Error;
 		}
 	}
-
 	void PopTopLevel()
 	{
 		if (CatConcat.IsValidIndex(0))
@@ -84,7 +85,6 @@ public:
 			CatConcat.RemoveAt(0);
 		}
 	}
-
 	bool HasValidCategories()
 	{
 		return CatConcat.Num() > 0;
@@ -92,7 +92,7 @@ public:
 
 private:
 
-	FORCEINLINE static TArray<FString> ParseCategories(const FString& InCatConcat, UFunction* InFunc = nullptr)
+	static TArray<FString> ParseCategories(const FString& InCatConcat, UFunction* InFunc = nullptr)
 	{
 		TArray<FString> Categories;
 

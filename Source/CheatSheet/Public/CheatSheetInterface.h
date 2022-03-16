@@ -8,5 +8,6 @@ class ICheatSheetInterface : public IModuleInterface
 {
 public:
 
+	virtual void ToggleListUI() = 0;
 	virtual void RebuildCheatMap() = 0;
 };

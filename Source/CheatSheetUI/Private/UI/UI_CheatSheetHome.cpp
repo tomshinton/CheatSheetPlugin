@@ -5,10 +5,13 @@
 #include "CheatSheetUI/Public/UI/Tips/UI_ControlTip.h"
 #include "CheatSheetUI/Public/UI/Tips/UI_CurrentTooltip.h"
 
+#include <Runtime/Core/Public/Modules/ModuleManager.h>
 #include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
 #include <Runtime/UMG/Public/Blueprint/WidgetTree.h>
 #include <Runtime/UMG/Public/Components/TextBlock.h>
 #include <Runtime/UMG/Public/Components/VerticalBox.h>
+
+#include "CheatSheet/Public/CheatSheet.h"
 
 UUI_CheatSheetHome::UUI_CheatSheetHome(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -16,47 +19,10 @@ UUI_CheatSheetHome::UUI_CheatSheetHome(const FObjectInitializer& ObjectInitializ
 	, HistoryReadout(nullptr)
 	, ControlTipsBox(nullptr)
 	, CurrentTooltipBox(nullptr)
-	, ControlTipClass(nullptr)
 	, Map()
 	, History()
 	, CurrentCategory(FCheatCategory())
 {}
-
-void UUI_CheatSheetHome::SynchronizeProperties()
-{
-	Super::SynchronizeProperties();
-
-	if (ControlTipsBox != nullptr)
-	{
-		ControlTipsBox->ClearChildren();
-
-		if (ControlTipClass != nullptr)
-		{
-			if (UInputSettings* InputSettings = const_cast<UInputSettings*>(GetDefault<UInputSettings>()))
-			{
-				const TArray<FInputActionKeyMapping> ExistingMappings = InputSettings->GetActionMappings();
-				for (const FInputActionKeyMapping& ExistingMapping : ExistingMappings)
-				{
-					FInputActionKeyMapping CurrentMapping = ExistingMapping;
-
-					const FString ActionNameAsString = ExistingMapping.ActionName.ToString();
-					const FString ReplacementPrefix = TEXT("");
-
-					/*if (ActionNameAsString.Contains(CheatSheetStaticBindings::CheatSheetInputPrefix))
-					{
-						if (UUI_ControlTip* NewTip = CreateWidget<UUI_ControlTip>(this, ControlTipClass))
-						{
-							CurrentMapping.ActionName = FName(*ActionNameAsString.Replace(*CheatSheetStaticBindings::CheatSheetInputPrefix, *ReplacementPrefix, ESearchCase::IgnoreCase));
-
-							NewTip->Mapping = CurrentMapping;
-							ControlTipsBox->AddChild(NewTip);
-						}
-					}*/
-				}
-			}
-		}
-	}
-}
 
 void UUI_CheatSheetHome::AddMap(const CheatMap& InMap)
 {
@@ -75,11 +41,25 @@ void UUI_CheatSheetHome::InitHomeView()
 
 		if (CurrentTooltipBox != nullptr)
 		{
-			CheatView->OnNewSelection.AddLambda([WeakThis = TWeakObjectPtr<UUI_CheatSheetHome>(this), this](const TWeakInterfacePtr<ICheatEntryInterface>& InNewSelection)
+			CheatView->OnNewSelection.AddWeakLambda(this, [this](const TWeakInterfacePtr<ICheatEntryInterface>& InOldSelection, const TWeakInterfacePtr<ICheatEntryInterface>& InNewSelection)
 			{
-				if (InNewSelection.IsValid() && WeakThis.IsValid())
+				if (ICheatEntryInterface* NewSelection = InNewSelection.Get())
 				{
-					CurrentTooltipBox->SetTooltip(InNewSelection->GetEntryTip());
+					if (ICheatEntryInterface* OldSelection = InOldSelection.Get())
+					{
+						OldSelection->GetOnCheatEntryExecuted().Unbind();
+					}
+
+					NewSelection->GetOnCheatEntryExecuted().BindWeakLambda(this, [this, NewSelection = NewSelection](const FCachedCheat& InCheat)
+					{
+						if(InCheat.ShouldCloseAfterExecution)
+						{
+							ICheatSheetInterface& CheatSheet = FModuleManager::GetModuleChecked<ICheatSheetInterface>("CheatSheet");
+							CheatSheet.ToggleListUI();
+						}
+					});
+
+					CurrentTooltipBox->SetTooltip(NewSelection->GetEntryTip());
 				}
 			});
 		}
@@ -122,7 +102,8 @@ bool UUI_CheatSheetHome::ShowScreenByID(const FGuid& InID)
 	{
 		InitHomeView();
 	}
-		return false;
+	
+	return false;
 }
 
 void UUI_CheatSheetHome::UpdateHistoryReadout(const FCheatCategory& InLastRequestedCategory)

@@ -25,6 +25,7 @@ public:
 	//ICheatEntryInterface
 	void ExecuteEntry() override;
 	virtual const FString GetEntryTip() const override;
+	virtual bool ShouldCloseAfterExecution() const override { return Cheat.ShouldCloseAfterExecution; };
 	//~ICheatEntryInterface
 	
 protected:
