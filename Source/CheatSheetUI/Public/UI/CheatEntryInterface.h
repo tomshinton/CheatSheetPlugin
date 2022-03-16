@@ -8,6 +8,8 @@
 
 #include "CheatEntryInterface.generated.h"
 
+class UWidget;
+
 DECLARE_DELEGATE_OneParam(FOnCheatEntryExecuted, const FCachedCheat& /*ExecutedCheat*/);
 
 UINTERFACE()
@@ -29,6 +31,8 @@ public:
 	virtual const FString GetEntryTip() const = 0;
 	virtual bool ShouldCloseAfterExecution() const = 0;
 
+	virtual UWidget& GetWidget() = 0;
+	
 	virtual FOnCheatEntryExecuted& GetOnCheatEntryExecuted() = 0;
 };
 

@@ -5,6 +5,7 @@
 #include "CheatSheetUI/Public/UI/Entries/UI_CategoryEntry.h"
 #include "CheatSheetUI/Public/UI/Entries/UI_CheatEntry.h"
 
+#include <Runtime/UMG/Public/Components/ScrollBox.h>
 #include <Runtime/UMG/Public/Components/VerticalBox.h>
 
 DEFINE_LOG_CATEGORY_STATIC(CheatViewLog, Log, Log);
@@ -13,6 +14,7 @@ UUI_CheatView::UUI_CheatView(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, CategoryBox(nullptr)
 	, CheatBox(nullptr)
+	, CheatScrollBox(nullptr)
 	, CheatCategoryClass(nullptr)
 	, CheatEntryClass(nullptr)
 	, Categories()
@@ -175,5 +177,10 @@ void UUI_CheatView::ApplyNewSelectionIndex()
 	{
 		CurrentSelection->SetIsSelected(true);
 		OnNewSelection.Broadcast(OldSelection, CurrentSelection);
+
+		if(CheatScrollBox != nullptr)
+		{
+			CheatScrollBox->ScrollWidgetIntoView(&CurrentSelection->GetWidget());
+		}
 	}
 }

@@ -68,6 +68,7 @@ public:
 	}
 	virtual const FString GetEntryTip() const override { return FString(); };
 	virtual bool ShouldCloseAfterExecution() const override { return false; };
+	virtual UWidget& GetWidget() override { return *Cast<UWidget>(this); };
 	//~ICheatEntryInterface
 
 protected:

@@ -9,6 +9,7 @@
 
 #include "UI_CheatSheetHome.generated.h"
 
+class USizeBox;
 class UUI_CurrentTooltip;
 class UUI_ControlTip;
 class UUI_CheatView;
@@ -44,6 +45,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* ControlTipsBox;
 
+	UPROPERTY(meta=(BindWidget))
+	USizeBox* InfoBox;
+	
 	UPROPERTY(meta = (BindWidget))
 	UUI_CurrentTooltip* CurrentTooltipBox;
 

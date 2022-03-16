@@ -9,6 +9,7 @@
 
 #include "UI_CheatView.generated.h"
 
+class UScrollBox;
 struct FCheatCategory;
 
 class UUI_CategoryEntry;
@@ -33,6 +34,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* CheatBox;
 
+	UPROPERTY(meta = (BindWidget))
+	UScrollBox* CheatScrollBox;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Categories")
 	TSubclassOf<UUI_CategoryEntry> CheatCategoryClass;
 

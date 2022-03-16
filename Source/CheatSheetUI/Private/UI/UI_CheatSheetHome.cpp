@@ -6,8 +6,7 @@
 #include "CheatSheetUI/Public/UI/Tips/UI_CurrentTooltip.h"
 
 #include <Runtime/Core/Public/Modules/ModuleManager.h>
-#include <Runtime/Engine/Classes/GameFramework/InputSettings.h>
-#include <Runtime/UMG/Public/Blueprint/WidgetTree.h>
+#include <Runtime/UMG/Public/Components/SizeBox.h>
 #include <Runtime/UMG/Public/Components/TextBlock.h>
 #include <Runtime/UMG/Public/Components/VerticalBox.h>
 
@@ -19,6 +18,7 @@ UUI_CheatSheetHome::UUI_CheatSheetHome(const FObjectInitializer& ObjectInitializ
 	, HistoryReadout(nullptr)
 	, ControlTipsBox(nullptr)
 	, CurrentTooltipBox(nullptr)
+	, InfoBox(nullptr)
 	, Map()
 	, History()
 	, CurrentCategory(FCheatCategory())
@@ -59,7 +59,16 @@ void UUI_CheatSheetHome::InitHomeView()
 						}
 					});
 
-					CurrentTooltipBox->SetTooltip(NewSelection->GetEntryTip());
+					const FString EntryTip = NewSelection->GetEntryTip();
+					if(!EntryTip.IsEmpty())
+					{
+						InfoBox->SetVisibility(ESlateVisibility::Visible);
+						CurrentTooltipBox->SetTooltip(NewSelection->GetEntryTip());
+					}
+					else
+					{
+						InfoBox->SetVisibility(ESlateVisibility::Hidden);
+					}
 				}
 			});
 		}
