@@ -88,7 +88,15 @@ void UUI_CheatSheetHome::InitHomeView()
 
 void UUI_CheatSheetHome::ShowPreviousCategory()
 {
-	ShowScreenByID(CurrentCategory.GetParentID());
+	if(History.Num() > 1)
+	{
+		ShowScreenByID(CurrentCategory.GetParentID());
+	}
+	else
+	{
+		ICheatSheetInterface& CheatSheet = FModuleManager::GetModuleChecked<ICheatSheetInterface>("CheatSheet");
+		CheatSheet.ToggleListUI();
+	}
 }
 
 bool UUI_CheatSheetHome::ShowScreenByID(const FGuid& InID)

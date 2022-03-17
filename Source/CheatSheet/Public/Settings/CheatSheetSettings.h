@@ -29,63 +29,83 @@ public:
 	UCheatSheetSettings(const FObjectInitializer& InObjectInitialiser)
 		: Super(InObjectInitialiser)
 		, CheatSheetMenu(nullptr)
-		, ShowBinding()
-		, ConfirmBinding()
-		, UpBinding()
-		, DownBinding()
-		, BackBinding()
+		, ShowBindings()
+		, ConfirmBindings()
+		, UpBindings()
+		, DownBindings()
+		, BackBindings()
 	{};
 
 	UPROPERTY(config, EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUI_CheatSheetHome> CheatSheetMenu;
 
 	UPROPERTY(config, EditDefaultsOnly)
-	FInputActionKeyMapping ShowBinding;
+	TArray<FInputActionKeyMapping> ShowBindings;
 
 	UPROPERTY(config, EditDefaultsOnly)
-	FInputActionKeyMapping ConfirmBinding;
+	TArray<FInputActionKeyMapping> ConfirmBindings;
 
 	UPROPERTY(config, EditDefaultsOnly)
-	FInputActionKeyMapping UpBinding;
+	TArray<FInputActionKeyMapping> UpBindings;
 
 	UPROPERTY(config, EditDefaultsOnly)
-	FInputActionKeyMapping DownBinding;
+	TArray<FInputActionKeyMapping> DownBindings;
 
 	UPROPERTY(config, EditDefaultsOnly)
-	FInputActionKeyMapping BackBinding;
+	TArray<FInputActionKeyMapping> BackBindings;
 
 	//UDeveloperSettings
 	virtual FName GetCategoryName() const override { return FName(TEXT("Plugins")); }
 	//~UDeveloperSettings
 
-	FInputActionKeyMapping GetShowBinding()
+	TArray<FInputActionKeyMapping> GetShowBinding()
 	{
-		ShowBinding.ActionName = CheatSheetBindingNames::ShowBinding;
-		return ShowBinding;
+		for(FInputActionKeyMapping& Mapping : ShowBindings)
+		{
+			Mapping.ActionName = CheatSheetBindingNames::ShowBinding;
+		}
+		
+		return ShowBindings;
 	}
 
-	FInputActionKeyMapping GetConfirmBinding()
+	TArray<FInputActionKeyMapping> GetConfirmBinding()
 	{
-		ConfirmBinding.ActionName = CheatSheetBindingNames::ConfirmBinding;
-		return ConfirmBinding;
+		for(FInputActionKeyMapping& Mapping : ConfirmBindings)
+		{
+			Mapping.ActionName = CheatSheetBindingNames::ConfirmBinding;
+		}
+
+		return ConfirmBindings;
 	}
 
-	FInputActionKeyMapping GetUpBinding()
+	TArray<FInputActionKeyMapping> GetUpBinding()
 	{
-		UpBinding.ActionName = CheatSheetBindingNames::UpBinding;
-		return UpBinding;
+		for(FInputActionKeyMapping& Mapping : UpBindings)
+		{
+			Mapping.ActionName = CheatSheetBindingNames::UpBinding;
+		}
+
+		return UpBindings;
 	}
 
-	FInputActionKeyMapping GetDownBinding() 
+	TArray<FInputActionKeyMapping> GetDownBinding() 
 	{
-		DownBinding.ActionName = CheatSheetBindingNames::DownBinding;
-		return DownBinding;
+		for(FInputActionKeyMapping& Mapping : DownBindings)
+		{
+			Mapping.ActionName = CheatSheetBindingNames::DownBinding;
+		}
+
+		return DownBindings;
 	}
 
-	FInputActionKeyMapping GetBackBinding() 
+	TArray<FInputActionKeyMapping> GetBackBinding() 
 	{
-		BackBinding.ActionName = CheatSheetBindingNames::BackBinding;
-		return BackBinding;
+		for(FInputActionKeyMapping& Mapping : BackBindings)
+		{
+			Mapping.ActionName = CheatSheetBindingNames::BackBinding;
+		}
+		
+		return BackBindings;
 	}
 };
 

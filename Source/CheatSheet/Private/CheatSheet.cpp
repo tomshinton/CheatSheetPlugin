@@ -82,11 +82,15 @@ void FCheatSheetModule::SetupBindings(APlayerController& InPlayerController)
 	UInputComponent* NewInputComponent = NewObject<UInputComponent>(&InPlayerController);
 	WeakInputComponent = NewInputComponent;
 
-	UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetShowBinding());
-
+	const TArray<FInputActionKeyMapping> Bindings = CachedSettings->GetShowBinding();
+	for(const FInputActionKeyMapping& Binding : Bindings)
+	{
+		UPlayerInput::AddEngineDefinedActionMapping(Binding);
+	}
+	
 	FInputActionBinding ShowMenuAB(CheatSheetBindingNames::ShowBinding, IE_Pressed);
 	ShowMenuAB.ActionDelegate.GetDelegateForManualSet().BindRaw(this, &FCheatSheetModule::ToggleListUI);
-	NewInputComponent->AddActionBinding(ShowMenuAB);
+	NewInputComponent->AddActionBinding(ShowMenuAB);	
 
 	NewInputComponent->RegisterComponent();
 	InPlayerController.PushInputComponent(NewInputComponent);
@@ -96,11 +100,17 @@ void FCheatSheetModule::SetupUINavigation()
 {
 	if (UInputComponent* StrongInputComponent = WeakInputComponent.Get())
 	{
-		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetConfirmBinding());
-		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetUpBinding());
-		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetDownBinding());
-		UPlayerInput::AddEngineDefinedActionMapping(CachedSettings->GetBackBinding());
+		TArray<FInputActionKeyMapping> Bindings;
+		Bindings.Append(CachedSettings->GetConfirmBinding());
+		Bindings.Append(CachedSettings->GetUpBinding());
+		Bindings.Append(CachedSettings->GetDownBinding());
+		Bindings.Append(CachedSettings->GetBackBinding());
 
+		for(const FInputActionKeyMapping& Binding : Bindings)
+		{
+			UPlayerInput::AddEngineDefinedActionMapping(Binding);
+		}
+		
 		//Up
 		FInputActionBinding UpAB(CheatSheetBindingNames::UpBinding, IE_Pressed);
 		UpAB.ActionDelegate.GetDelegateForManualSet().BindUObject(HomeScreen->GetCheatView(), &UUI_CheatView::UpSelection);
