@@ -207,6 +207,7 @@ void FCheatSheetModule::RebuildCheatMap()
 		
 		FARFilter Filter;
 		Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+
 		Filter.bRecursiveClasses = true;
 		Filter.bRecursivePaths = true;
 
@@ -229,16 +230,42 @@ void FCheatSheetModule::RebuildCheatMap()
 							const TArray<FString> GeneratedCheats = CheatAssetCDO->Generate();
 							for (const FString& GeneratedCheat : GeneratedCheats)
 							{
-								const FString RebuiltString = FString::Printf(TEXT("%s %s"), *CheatAssetCDO->CheatStringRoot, *GeneratedCheat);
-
 								Map.AddCheat(FCachedCheat(
-									RebuiltString,
-									RebuiltString,
+									GeneratedCheat,
+									GeneratedCheat,
 									CheatAssetCDO->Categories,
 									CheatAssetCDO->Tooltip,
 									nullptr,
-									true));
+									CheatAssetCDO->ShouldCloseAfterExecution));
 							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//Find Native Cheat Builders
+	{
+		for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+		{
+			if (UClass* Class = *ClassIt)
+			{
+				if (Class->IsNative() && Class->IsChildOf(UCachedCheatBuilder::StaticClass()))
+				{
+					UObject* CDO = Class->GetDefaultObject();
+					if (UCachedCheatBuilder* Builder = Cast<UCachedCheatBuilder>(CDO))
+					{
+						const TArray<FString> GeneratedCheats = Builder->Generate();
+						for (const FString& GeneratedCheat : GeneratedCheats)
+						{
+							Map.AddCheat(FCachedCheat(
+								GeneratedCheat,
+								GeneratedCheat,
+								Builder->Categories,
+								Builder->Tooltip,
+								nullptr,
+								Builder->ShouldCloseAfterExecution));
 						}
 					}
 				}

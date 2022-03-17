@@ -20,18 +20,22 @@ public:
 		: Super(InObjectInitialiser)
 	{};
 	
+	UFUNCTION(BlueprintNativeEvent, Category = "Generation")
+	TArray<FString> Generate();
+	
 	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Categories in descending order.  For Instance, Root/Category1/Category2."))
 	TArray<FString> Categories;
-
-	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Base cheat string.  This is the string that will have any dynamically generated params appended onto it."))
-	FString CheatStringRoot;
-
+	
 	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Does this Cheat need to be added to the Commonly Used top level category? Typically high traffic cheats.  As this is a dynamically generated cheat, having a category is highly advised."))
 	bool IsCommonlyUsed;
 
 	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "What does this cheat actually do?"))
 	FString Tooltip;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Generation")
-	TArray<FString> Generate();
+	UPROPERTY(EditDefaultsOnly, meta = (Category = "Cheat Meta", Tooltip = "Should we close the CheatSheet once this command has been issued?"))
+	bool ShouldCloseAfterExecution;
+
+protected:
+
+	virtual TArray<FString> Generate_Implementation() { return TArray<FString>(); };
 };
